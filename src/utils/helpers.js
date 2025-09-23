@@ -89,7 +89,7 @@ export const helpers = {
   },
 
   pick: (obj, keys) => {
-    const resilt = {};
+    const result = {};
     keys.forEach(key => {
         if (obj.hasOwnProperty(key)) {
             result[key] = obj[key];
@@ -102,10 +102,10 @@ export const helpers = {
   getImageDimensions: (file) => {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        const url = URL.createObjectUrl(file);
+        const url = URL.createObjectURL(file);
 
         img.onload = () => {
-            URL.revokedObjectURL(url);
+            URL.revokeObjectURL(url);
             resolve({ width: img.width, height: img.height});
         };
 
@@ -118,7 +118,7 @@ export const helpers = {
   },
 
   resizeImage: async (file, maxWidth, maxHeight) => {
-    const dimensions = await helpers.getImagesDimensions(file);
+    const dimensions = await helpers.getImageDimensions(file);
 
     if(dimensions.width <= maxWidth && dimensions.height <= maxHeight) {
         return file;
@@ -156,16 +156,94 @@ export const helpers = {
             }, file.type);
         };
 
-        img.src = URL.creatObjectURL(file);
+        img.src = URL.createObjectURL(file);
     });
-},
+  },
 
-// Storage helpers
-
-storage: {
+  // Storage helpers
+  storage: {
     get: (key) => {
-        try {
-            const item
-        }
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : null;
+      } catch (error) {
+        console.error('Error reading item from localStorage:', error);
+        return null;
+      }
+    },
+
+    set: (key, value) => {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (error) {
+        console.error('Error writing item to localStorage:', error);
+      }
+    },
+
+    remove: (key) => {
+      try {
+        localStorage.removeItem(key);
+      } catch (error) {
+        console.error('Error removing item from localStorage:', error);
+      }
+    },
+
+    clear: () => {
+      try {
+        localStorage.clear();
+      } catch (error) {
+        console.error('Error clearing localStorage:', error);
+      }
+    },
+  },
+
+  // Debounce function
+  debounce: (func, wait) => {
+    let timeout;
+
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  },
+
+  // Throttle function
+  throttle: (func, limit) => {
+    let inThrottle;
+
+    return function(...args) {
+      if (!inThrottle) {
+        func.apply(this, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  },
+
+  // Generate random ID
+  generateID: () => {
+    return `id_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  },
+
+  // Check if running on mobile
+  isMobile: () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent);
+  },
+
+  // Copy to clipboard
+  copyToClipboard: async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      return false;
     }
-}
+  },
+};

@@ -95,6 +95,118 @@ export const validators = {
     
     // TODO: Add validators for: messages, duo names, invite codes, profile completeness,
     // scheduling proposals, and API checks
+    message: (message) => {
+        if (!message || !message.trim()) return 'Message cannot be empty';
+        if (message.length > CONSTANTS.MAX_MESSAGE_LENGTH) {
+            return `Message cannot exceed ${CONSTANTS.MAX_MESSAGE_LENGTH} characters`;
+        }
+        return null;
+    },
+
+    duoName: (name) => {
+        if (!name) return 'Duo name is requireed';
+        if (name.length < 3) return 'Duo name must be at least 3 characters';
+        if (name.length > 50) return 'Duo name must not exceed 50 characters';
+        return null;
+    },
     
+    inviteCode: (code) => {
+        if (!code) return 'Invite code is required';
+        if (code.length !== 8) return 'Invite code must be 8 characters';
+        if (!/^[A-Z0-9]+$/.test(code)) return 'Invite code must contain only uppercase letters and numbers';
+        return null;
+    },
+
+    // Composite validators    
+    profileCompleteness: (profile) => {
+        const errors = {};
+
+        const nameError = validators.name(profile.name);
+        if (nameError) errors.name = nameError;
+
+        const bioError = validators.bio(profile.bio);
+        if (bioError) errors.bio = bioError;
+
+        const photosError = validators.photos(profile.photos);
+        if (photosError) errors.photos = photosError;
+
+        const interestsError = validators.interests(profile.interests);
+        if (interestsError) errors.interests = interestsError;
+
+        return Object.keys(errors).length > 0 ? errors : null;
+    },
+
+    scheduleProposal: (proposal) => {
+        const errors = {};
+
+        if (!proposal.date) {
+            errors.date = 'Date is required';
+        } else if (new Date(proposal.date) < new Date()) {
+            errors.date = 'Date msut be in the future';
+        }
+
+        if (!proposal.time) {
+            errors.time = 'Time is required';
+        }
+
+        if (!proposal.venue) {
+            errors.venue = 'Please select a venue';
+        }
+
+        if (!propsal.activityType) {
+            errors.activityType = 'Please select an activity type';
+        }
+
+        return Object.keys(errors).length > 0 ? errors : null;
+    },
     
+};
+
+// Helper function to validate multiple fields
+export const validateForm = (data, fields)  => {
+    const errors = {};
+
+    fields.forEach(field => {
+        if (validators[field]) {
+            const error = validators[field](data[feld]);
+            if (error) {
+                errors[field] = error;
+            }
+        }
+    });
+
+    return Object.keys(errors).length > 0 ? errors : null;
+};
+
+// Async validatiors for API checks
+export const asyncValidators = {
+    emailUnique: async (email) => {
+        try {
+            const reponse = await fetch(`${CONSTANTS.API_BASE_URL}/auth/check-email`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json',},
+                body: JSON.stringify({ email }),
+            });
+            const data = await response.json();
+            return data.exists ? 'Email already in use' : null;
+        } catch (error) {
+            console.error('Email check failed: ', error);
+            return null;
+        }
+    },
+
+    phoneUnique: async (phone) => {
+        try {
+            const response = await fetch(`${CONSTANTS.API_BASE_URL}/auth/check-phone`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json',},
+                body: JSON.stringify({ phone }),
+            });
+            const data = await response.json();
+            return data.exists ? 'Phone number already in use' : null;
+        } catch (error) {
+            console.error('Invite code check failed: ', error);
+            return null;
+        }
+    },
 };

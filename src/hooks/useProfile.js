@@ -4,12 +4,14 @@ import { profileApi } from '../services/api/profiles';
 import { duoApi } from '../services/api/duos';
 
 export const useProfile = () => {
+  // Profile and duo state management
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [duo, setDuo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch profile and duo data when user is available
   useEffect(() => {
     if (user) {
       fetchProfile();
@@ -19,6 +21,7 @@ export const useProfile = () => {
     }
   }, [user]);
 
+  // API functions for profile management
   const fetchProfile = async () => {
     try {
       const response = await profileApi.getProfile();
@@ -39,6 +42,7 @@ export const useProfile = () => {
     }
   };
 
+  // Profile update functionality
   const updateProfile = async (updates) => {
     try {
       const response = await profileApi.updateProfile(updates);

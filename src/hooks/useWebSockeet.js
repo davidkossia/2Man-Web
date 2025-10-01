@@ -3,12 +3,14 @@ import { io } from 'socket.io-client';
 import { useAuth } from '../contexts/AuthContext';
 
 export const useWebSocket = ({ onMessage, roomId }) => {
+  // WebSocket connection state and reconnection management
   const { user } = useAuth();
   const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
   const reconnectTimeoutRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
 
+  // Initialize connection when user and roomId are available
   useEffect(() => {
     if (user && roomId) {
       connect();
@@ -22,6 +24,7 @@ export const useWebSocket = ({ onMessage, roomId }) => {
     };
   }, [user, roomId]);
 
+  // WebSocket connection setup with authentication and room joining
   const connect = () => {
     const wsUrl = process.env.REACT_APP_WEBSOCKET_URL;
     
@@ -38,6 +41,7 @@ export const useWebSocket = ({ onMessage, roomId }) => {
       reconnectionDelay: 1000,
     });
 
+    // Connection event handlers
     socketRef.current.on('connect', () => {
       console.log('WebSocket connected');
       setIsConnected(true);
@@ -49,7 +53,6 @@ export const useWebSocket = ({ onMessage, roomId }) => {
       setIsConnected(false);
       
       if (reason === 'io server disconnect') {
-        // Server disconnected us, try to reconnect
         attemptReconnect();
       }
     });
@@ -65,6 +68,7 @@ export const useWebSocket = ({ onMessage, roomId }) => {
     });
   };
 
+  // Connection management functions
   const disconnect = () => {
     if (socketRef.current) {
       socketRef.current.disconnect();
@@ -72,6 +76,7 @@ export const useWebSocket = ({ onMessage, roomId }) => {
     }
   };
 
+  // Exponential backoff reconnection strategy
   const attemptReconnect = () => {
     if (reconnectAttemptsRef.current < 5) {
       reconnectAttemptsRef.current += 1;
@@ -84,6 +89,7 @@ export const useWebSocket = ({ onMessage, roomId }) => {
     }
   };
 
+  // Message sending and room management
   const sendMessage = (data) => {
     if (socketRef.current && isConnected) {
       socketRef.current.emit('message', {

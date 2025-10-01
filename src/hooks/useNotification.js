@@ -3,11 +3,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { Hub } from 'aws-amplify';
 
 export const useNotifications = () => {
+  // Notification state management
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [newMatches, setNewMatches] = useState(0);
 
+  // Initialize notifications when user is available
   useEffect(() => {
     if (user) {
       fetchNotificationCounts();
@@ -15,9 +17,9 @@ export const useNotifications = () => {
     }
   }, [user]);
 
+  // Fetch initial notification counts from API
   const fetchNotificationCounts = async () => {
     try {
-      // This would call your API to get notification counts
       const response = await fetch(`/api/notifications/counts`, {
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -31,6 +33,7 @@ export const useNotifications = () => {
     }
   };
 
+  // Subscribe to real-time notification events via AWS Hub
   const subscribeToNotifications = () => {
     const listener = Hub.listen('notifications', ({ payload }) => {
       switch (payload.event) {
@@ -54,13 +57,12 @@ export const useNotifications = () => {
     return () => Hub.remove('notifications', listener);
   };
 
+  // Functions to mark notifications as read/viewed
   const markMessagesAsRead = (matchId) => {
-    // Update local state and notify server
     Hub.dispatch('notifications', { event: 'message-read', data: { matchId } });
   };
 
   const markMatchAsViewed = (matchId) => {
-    // Update local state and notify server
     Hub.dispatch('notifications', { event: 'match-viewed', data: { matchId } });
   };
 

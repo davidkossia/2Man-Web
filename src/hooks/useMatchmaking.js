@@ -4,15 +4,18 @@ import { matchingApi } from '../services/api/matching';
 import { setCandidates, removeCandidate, addMatch } from '../store/slices/matchingSlice';
 
 export const useMatchmaking = () => {
+  // Redux state management for matching functionality
   const dispatch = useDispatch();
   const { candidates, matches } = useSelector((state) => state.matching);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Initialize candidates on mount
   useEffect(() => {
     fetchCandidates();
   }, []);
 
+  // API functions for matchmaking operations
   const fetchCandidates = async () => {
     setLoading(true);
     try {
@@ -27,6 +30,7 @@ export const useMatchmaking = () => {
     }
   };
 
+  // Swipe functionality with match detection
   const swipeCandidate = async (duoId, action) => {
     try {
       const response = await matchingApi.swipe(duoId, action);

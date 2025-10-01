@@ -4,6 +4,7 @@ import { chatApi } from '../services/api/chat';
 import { useAuth } from '../contexts/AuthContext';
 
 export const useChat = (matchId) => {
+  // State management for chat functionality
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [matchDetails, setMatchDetails] = useState(null);
@@ -12,11 +13,13 @@ export const useChat = (matchId) => {
   const [typing, setTyping] = useState(null);
   const typingTimeoutRef = useRef(null);
 
+  // WebSocket connection for real-time communication
   const { sendMessage: wsSend, isConnected } = useWebSocket({
     onMessage: handleWebSocketMessage,
     roomId: matchId,
   });
 
+  // Initialize chat data when matchId changes
   useEffect(() => {
     if (matchId) {
       fetchMatchDetails();
@@ -24,6 +27,7 @@ export const useChat = (matchId) => {
     }
   }, [matchId]);
 
+  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) {
@@ -32,6 +36,7 @@ export const useChat = (matchId) => {
     };
   }, []);
 
+  // API functions for fetching data
   const fetchMatchDetails = async () => {
     try {
       const response = await chatApi.getMatchDetails(matchId);
@@ -67,6 +72,7 @@ export const useChat = (matchId) => {
     }
   };
 
+  // WebSocket message handler for real-time updates
   function handleWebSocketMessage(message) {
     switch (message.type) {
       case 'message':
@@ -101,6 +107,7 @@ export const useChat = (matchId) => {
     }
   }
 
+  // Message sending with optimistic updates
   const sendMessage = async (text) => {
     const message = {
       id: Date.now().toString(),
@@ -135,6 +142,7 @@ export const useChat = (matchId) => {
     }
   };
 
+  // Typing indicator functionality
   const sendTypingIndicator = () => {
     if (isConnected) {
       wsSend({
@@ -145,6 +153,7 @@ export const useChat = (matchId) => {
     }
   };
 
+  // Pagination for loading more messages
   const loadMoreMessages = async (beforeTimestamp) => {
     try {
       const response = await chatApi.getMessages(matchId, {
